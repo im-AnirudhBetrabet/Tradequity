@@ -1,3 +1,5 @@
+Project Structure
+```
 stoxcircle-backend/
 │
 ├── app/
@@ -113,3 +115,4 @@ stoxcircle-backend/
 ├── requirements.txt
 ├── docker-compose.yml
 └── README.md
+```
