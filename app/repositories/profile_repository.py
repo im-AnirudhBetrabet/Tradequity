@@ -1,0 +1,2 @@
+"""Profile repository placeholder."""
+

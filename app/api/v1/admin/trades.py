@@ -1,0 +1,2 @@
+"""Admin trades endpoints (placeholder)."""
+

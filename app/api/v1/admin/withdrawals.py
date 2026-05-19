@@ -1,0 +1,2 @@
+"""Admin withdrawals endpoints (placeholder)."""
+

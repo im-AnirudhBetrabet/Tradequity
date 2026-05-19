@@ -1,0 +1,2 @@
+"""Tradequity app package."""
+

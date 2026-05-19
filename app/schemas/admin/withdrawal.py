@@ -1,0 +1,2 @@
+"""Admin withdrawal schema placeholder."""
+

@@ -1,0 +1,2 @@
+"""User portfolio schema placeholder."""
+

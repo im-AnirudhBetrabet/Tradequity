@@ -1,0 +1,2 @@
+"""Profile model placeholder."""
+

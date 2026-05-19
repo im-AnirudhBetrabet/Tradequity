@@ -1,0 +1,2 @@
+"""Admin trade schema placeholder."""
+

@@ -1,0 +1,6 @@
+version: '3.8'
+services:
+  app:
+    image: python:3.10-slim
+    command: echo "placeholder"
+

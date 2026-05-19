@@ -1,0 +1,2 @@
+"""Buy service placeholder."""
+

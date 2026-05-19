@@ -1,0 +1,2 @@
+"""Allocation model placeholder."""
+

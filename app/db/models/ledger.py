@@ -1,0 +1,2 @@
+"""Ledger model placeholder."""
+

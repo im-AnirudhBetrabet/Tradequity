@@ -1,0 +1,2 @@
+"""User withdrawals endpoints (placeholder)."""
+

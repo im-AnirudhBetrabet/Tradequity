@@ -1,0 +1,2 @@
+"""Admin allocation schema placeholder."""
+

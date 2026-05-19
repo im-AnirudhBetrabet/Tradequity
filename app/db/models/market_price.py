@@ -1,0 +1,2 @@
+"""Market price model placeholder."""
+

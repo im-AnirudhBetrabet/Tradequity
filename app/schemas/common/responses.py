@@ -1,0 +1,2 @@
+"""Common response schemas placeholder."""
+

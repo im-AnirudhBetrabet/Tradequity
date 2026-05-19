@@ -1,0 +1,43 @@
+# Web framework
+fastapi
+uvicorn[standard]
+
+# Database
+sqlalchemy
+asyncpg
+alembic
+
+# Config / env
+pydantic
+pydantic-settings
+python-dotenv
+
+# Auth / JWT
+python-jose[cryptography]
+cryptography
+
+# HTTP client
+httpx
+
+# Background jobs
+APScheduler
+
+# Data validation helpers
+email-validator
+
+# Date utilities
+python-dateutil
+
+# Retry helpers (useful for market fetch resilience)
+tenacity
+
+# JSON performance
+orjson
+
+# Logging
+structlog
+
+# Testing
+pytest
+pytest-asyncio
+pytest-cov

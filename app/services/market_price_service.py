@@ -1,0 +1,2 @@
+"""Market price service placeholder."""
+

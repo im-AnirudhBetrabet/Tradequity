@@ -1,0 +1,2 @@
+"""User withdrawal schema placeholder."""
+

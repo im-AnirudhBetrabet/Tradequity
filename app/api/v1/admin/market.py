@@ -1,0 +1,2 @@
+"""Admin market endpoints (placeholder)."""
+

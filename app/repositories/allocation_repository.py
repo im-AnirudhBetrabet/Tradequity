@@ -1,0 +1,2 @@
+"""Allocation repository placeholder."""
+

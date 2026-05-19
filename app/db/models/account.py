@@ -1,0 +1,2 @@
+"""Account model placeholder."""
+

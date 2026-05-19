@@ -1,0 +1,2 @@
+"""Admin allocations endpoints (placeholder)."""
+
