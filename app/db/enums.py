@@ -62,3 +62,10 @@ class TradeType(str, Enum):
 
     BUY  = "buy"
     SELL = "sell"
+
+class PositionStatus(str, Enum):
+    """
+    Master position lifecycle states.
+    """
+    OPEN   = "open"
+    CLOSED = "closed"
