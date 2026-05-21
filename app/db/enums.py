@@ -46,3 +46,19 @@ class TransactionReferenceType(str, Enum):
     FEE         = "performance_fee"
     ADJUSTMENT  = "adjustment"
     PENALTY     = "redemption_penalty"
+
+class AssetType(str, Enum):
+    """
+    Supported investment asset classifications.
+    """
+
+    EQUITY = "equity"
+    ETF    = "etf"
+
+class TradeType(str, Enum):
+    """
+    Supported trade execution directions.
+    """
+
+    BUY  = "buy"
+    SELL = "sell"
