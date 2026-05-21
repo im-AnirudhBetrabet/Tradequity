@@ -80,7 +80,7 @@ class TradeExecution(Base):
     trade_type     : Mapped[TradeType]   = mapped_column(SqlEnum(TradeType, name="trade_type", native_enum=True,), nullable=False,)
     symbol         : Mapped[str]         = mapped_column(Text,nullable=False,)
     instrument_name: Mapped[str]         = mapped_column(Text,nullable=False,)
-    asset_type     : Mapped[AssetType]   = mapped_column(SqlEnum(    AssetType,    name="asset_type",    native_enum=True,),nullable=False,)
+    asset_type     : Mapped[AssetType]   = mapped_column(SqlEnum(AssetType, name="asset_type", native_enum=True,),nullable=False,)
     position_id    : Mapped[UUID | None] = mapped_column(ForeignKey("master_positions.id", ondelete="RESTRICT"),nullable=True,)
     quantity       : Mapped[Decimal]     = mapped_column(Numeric(20, 8),nullable=False,)
     price          : Mapped[Decimal]     = mapped_column(Numeric(20, 8),nullable=False,)

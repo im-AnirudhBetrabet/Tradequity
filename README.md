@@ -1,6 +1,6 @@
 Project Structure
 ```
-stoxcircle-backend/
+Tradequity/
 │
 ├── app/
 │   ├── api/
