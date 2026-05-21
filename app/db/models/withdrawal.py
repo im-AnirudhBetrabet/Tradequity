@@ -72,84 +72,21 @@ class WithdrawalRequest(Base):
             Record creation timestamp.
     """
 
-    __tablename__ = "withdrawal_requests"
+    __tablename__   = "withdrawal_requests"
     __mapper_args__ = {"eager_defaults": True}
 
-    id: Mapped[UUID] = mapped_column(
-        primary_key=True,
-    )
-
-    user_id: Mapped[UUID] = mapped_column(
-        ForeignKey("profiles.id", ondelete="RESTRICT"),
-        nullable=False,
-    )
-
-    requested_amount: Mapped[Decimal] = mapped_column(
-        Numeric(20, 8),
-        nullable=False,
-    )
-
-    principal_amount: Mapped[Decimal] = mapped_column(
-        Numeric(20, 8),
-        nullable=False,
-    )
-
-    penalty_pct: Mapped[Decimal] = mapped_column(
-        Numeric(10, 4),
-        nullable=False,
-    )
-
-    penalty_amount: Mapped[Decimal] = mapped_column(
-        Numeric(20, 8),
-        nullable=False,
-    )
-
-    net_payout: Mapped[Decimal] = mapped_column(
-        Numeric(20, 8),
-        nullable=False,
-    )
-
-    liquidation_required: Mapped[bool] = mapped_column(
-        Boolean,
-        nullable=False,
-    )
-
-    status: Mapped[WithdrawalStatus] = mapped_column(
-        SqlEnum(
-            WithdrawalStatus,
-            name="withdrawal_status",
-            native_enum=True,
-        ),
-        nullable=False,
-    )
-
-    requested_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        nullable=False,
-    )
-
-    processed_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True),
-        nullable=True,
-    )
-
-    completed_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True),
-        nullable=True,
-    )
-
-    processed_by: Mapped[UUID | None] = mapped_column(
-        ForeignKey("profiles.id", ondelete="RESTRICT"),
-        nullable=True,
-    )
-
-    notes: Mapped[str | None] = mapped_column(
-        Text,
-        nullable=True,
-    )
-
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        nullable=False,
-        server_default=func.now(),
-    )
+    id                  : Mapped[UUID]             = mapped_column(primary_key=True)
+    user_id             : Mapped[UUID]             = mapped_column(ForeignKey("profiles.id", ondelete="RESTRICT"),nullable=False)
+    requested_amount    : Mapped[Decimal]          = mapped_column(Numeric(20, 8),nullable=False)
+    principal_amount    : Mapped[Decimal]          = mapped_column(Numeric(20, 8),nullable=False)
+    penalty_pct         : Mapped[Decimal]          = mapped_column(Numeric(10, 4),nullable=False)
+    penalty_amount      : Mapped[Decimal]          = mapped_column(Numeric(20, 8),nullable=False)
+    net_payout          : Mapped[Decimal]          = mapped_column(Numeric(20, 8),nullable=False)
+    liquidation_required: Mapped[bool]             = mapped_column(Boolean,nullable=False)
+    status              : Mapped[WithdrawalStatus] = mapped_column(SqlEnum(WithdrawalStatus, name="withdrawal_status", native_enum=True), nullable=False)
+    requested_at        : Mapped[datetime]         = mapped_column(DateTime(timezone=True),nullable=False)
+    processed_at        : Mapped[datetime | None]  = mapped_column(DateTime(timezone=True),nullable=True)
+    completed_at        : Mapped[datetime | None]  = mapped_column(DateTime(timezone=True),nullable=True)
+    processed_by        : Mapped[UUID | None]      = mapped_column(ForeignKey("profiles.id", ondelete="RESTRICT"),nullable=True)
+    notes               : Mapped[str | None]       = mapped_column(Text,nullable=True)
+    created_at          : Mapped[datetime]         = mapped_column(DateTime(timezone=True),nullable=False,server_default=func.now())
