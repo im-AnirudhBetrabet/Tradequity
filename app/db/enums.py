@@ -76,3 +76,14 @@ class AllocationStatus(str, Enum):
     """
     OPEN   = "open"
     CLOSED = "closed"
+
+class WithdrawalStatus(str, Enum):
+    """
+    Withdrawal request workflow states.
+    """
+    PENDING    = "pending"
+    APPROVED   = "approved"
+    REJECTED   = "rejected"
+    PROCESSING = "processing"
+    COMPLETED  = "completed"
+    FAILED     = "failed"
