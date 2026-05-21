@@ -69,3 +69,10 @@ class PositionStatus(str, Enum):
     """
     OPEN   = "open"
     CLOSED = "closed"
+
+class AllocationStatus(str, Enum):
+    """
+    User allocation lifecycle states.
+    """
+    OPEN   = "open"
+    CLOSED = "closed"
