@@ -20,20 +20,9 @@ from sqlalchemy     import DateTime, Enum as SqlEnum, ForeignKey, Numeric, Text
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
 
-from app.db.base import Base
+from app.db.base  import Base
+from app.db.enums import TransactionReferenceType
 
-class TransactionReferenceType(str, Enum):
-    """
-    Supported ledger transaction reference classifications.
-    """
-
-    DEPOSIT     = "deposit"
-    WITHDRAWAL  = "withdrawal"
-    ALLOCATION  = "allocation"
-    REALIZATION = "profit_realization"
-    FEE         = "performance_fee"
-    ADJUSTMENT  = "adjustment"
-    PENALTY     = "redemption_penalty"
 
 
 class LedgerTransaction(Base):

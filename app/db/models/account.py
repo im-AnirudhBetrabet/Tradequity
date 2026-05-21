@@ -16,27 +16,8 @@ from sqlalchemy     import Boolean, DateTime, Enum as SqlEnum, ForeignKey, Text
 from sqlalchemy.sql import func
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.db.base import Base
-
-class AccountType(str, Enum):
-    """
-    Supported financial account types.
-
-    User accounts:
-        user_cash:
-            Liquid funds available to an individual user.
-
-    Platform accounts:
-        platform_treasury:
-            Platform-held pooled investment capital.
-
-        platform_revenue:
-            Platform-earned fees and revenue.
-    """
-
-    USER_CASH         = "user_cash"
-    PLATFORM_TREASURY = "platform_treasury"
-    PLATFORM_REVENUE  = "platform_revenue"
+from app.db.base  import Base
+from app.db.enums import AccountType
 
 class Account(Base):
     """
