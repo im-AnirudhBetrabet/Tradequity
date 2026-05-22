@@ -35,8 +35,25 @@ class AccountRepository:
         """
         self.db = db
 
+    async def get_by_id(self, account_id: UUID) -> Account | None:
+        """
+        Retrieve an account by identifier.
 
-    async def get_by_id(self, user_id: UUID) -> Account | None:
+        Args:
+            account_id:
+                Target account identifier.
+
+        Returns:
+            Account | None:
+                Matching account if found, otherwise None.
+        """
+        stmt = select(Account).where(Account.id == account_id)
+
+        result = await self.db.execute(stmt)
+
+        return result.scalar_one_or_none()
+    
+    async def get_user_cash_account(self, user_id: UUID) -> Account | None:
         """
         Retrieve a user's liquid cash account.
         Args:
