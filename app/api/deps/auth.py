@@ -15,6 +15,7 @@ Design principles:
 
 import httpx
 from typing              import Any
+from uuid                import UUID
 from datetime            import datetime, timedelta, timezone
 from fastapi             import Depends, HTTPException, Security
 from fastapi.security    import HTTPAuthorizationCredentials, HTTPBearer
@@ -40,7 +41,7 @@ class AuthenticatedUser:
             Full validated JWT claims payload.
     """
 
-    def __init__(self, user_id: str, claims: dict[str, Any]) -> None:
+    def __init__(self, user_id: UUID, claims: dict[str, Any]) -> None:
         self.user_id = user_id
         self.claims  = claims
 
@@ -110,11 +111,15 @@ async def get_current_user( credentials: HTTPAuthorizationCredentials = Security
             issuer=settings.supabase_issuer
         )
 
-        user_id = claims.get("sub")
+        subject = claims.get("sub")
 
-        if not user_id:
+        if not subject:
             raise AuthenticationError("JWT subject claim is missing")
-
+        try:
+            user_id = UUID(subject)
+        except ValueError as exc:
+            raise AuthenticationError("JWT subject claim is not a valid UUID") from exc
+        
         return AuthenticatedUser(
             user_id=user_id,
             claims=claims
