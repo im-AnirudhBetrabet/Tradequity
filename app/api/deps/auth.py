@@ -119,7 +119,7 @@ async def get_current_user( credentials: HTTPAuthorizationCredentials = Security
             user_id = UUID(subject)
         except ValueError as exc:
             raise AuthenticationError("JWT subject claim is not a valid UUID") from exc
-        
+
         return AuthenticatedUser(
             user_id=user_id,
             claims=claims
