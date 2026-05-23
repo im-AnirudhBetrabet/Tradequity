@@ -92,3 +92,20 @@ class TradeRepository:
         result = await self.db.execute(stmt)
 
         return list(result.scalars().all())
+
+    async def update(self, trade: TradeExecution) -> TradeExecution:
+        """
+        Flush updates for a mutated trade execution activity
+
+        Args:
+            trade:
+                Mutated trade execution entity.
+            
+        Returns:
+            TradeExecution:
+                Updated trade execution entity.
+        """
+
+        await self.db.flush()
+
+        return trade
