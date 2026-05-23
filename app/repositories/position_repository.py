@@ -46,7 +46,8 @@ class PositionRepository:
         """
         self.db.add(position)
         await self.db.flush()
-
+        return position
+    
     async def get_by_id(self, position_id: UUID) -> MasterPosition | None:
         """
         Retrieve a master position by identifier.
