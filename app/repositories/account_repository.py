@@ -126,3 +126,28 @@ class AccountRepository:
         await self.db.flush()
 
         return account
+
+    async def get_user_cash_account_for_update(self, user_id: UUID) -> Account | None:
+        """
+        Retrieve and lock a user's liquid cash account.
+
+        This method acquires a row-level database lock to prevent concurrent
+        workflows from overspending the same user funds.
+
+        Args:
+            user_id:
+                User profile identifier.
+
+        Returns:
+            Account | None:
+                Locker user cash account if found.
+        """
+        stmt = select(Account).where(
+            Account.user_id == user_id,
+            Account.account_type == AccountType.USER_CASH,
+            Account.is_active.is_(True)
+        ).with_for_update()
+
+        result = await self.db.execute(stmt)
+
+        return result.scalar_one_or_none()

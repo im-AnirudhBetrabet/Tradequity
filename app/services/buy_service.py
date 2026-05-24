@@ -93,7 +93,7 @@ class BuyService:
                 allocations   = request.allocations
             )
 
-            await self._validate_users_and_balances(
+            locked_cash_accounts = await self._validate_users_and_balances(
                 allocations=request.allocations,
             )
 
@@ -122,9 +122,10 @@ class BuyService:
             await self.allocation_repository.create_many(allocation_records)
 
             ledger_transactions = await self._build_ledger_transactions(
-                treasury_account_id= treasury_account.id,
-                reference_id       = trade.id,
-                allocations        = request.allocations
+                treasury_account_id = treasury_account.id,
+                reference_id        = trade.id,
+                allocations         = request.allocations,
+                locked_cash_accounts= locked_cash_accounts
             )
 
             await self.ledger_repository.create_many(ledger_transactions)
@@ -188,9 +189,12 @@ class BuyService:
         if actual_total != expected_total:
             raise InvalidAllocationError("Allocation total must exactly match trade cost")
 
-    async def _validate_users_and_balances(self, allocations: list[AllocationInput]) -> None:
+    async def _validate_users_and_balances(self, allocations: list[AllocationInput]) -> dict[UUID, UUID]:
         """
         Validate user existence and funding capacity.
+
+        User cash accounts are locked in deterministic order to prevent
+        concurrent overspend races and deadlock conditions.
 
         Args:
             allocations:
@@ -203,13 +207,16 @@ class BuyService:
             InsufficientFundsError:
                 If balances are insufficient.
         """
-        for allocation in allocations:
+        locked_cash_accounts: dict[UUID, UUID] = {}
+        sorted_allocations = sorted(allocations, key= lambda allocation: str(allocation.user_id))
+
+        for allocation in sorted_allocations:
             profile = await self.profile_repository.get_active_by_id(allocation.user_id)
 
             if profile is None:
                 raise ResourceNotFoundError(f"User not found: {allocation.user_id}")
 
-            cash_account = await self.account_repository.get_user_cash_account(allocation.user_id)
+            cash_account = await self.account_repository.get_user_cash_account_for_update(allocation.user_id)
 
             if cash_account is None:
                 raise ResourceNotFoundError(f"Cash account missing for user: {allocation.user_id}")
@@ -218,6 +225,10 @@ class BuyService:
 
             if balance < allocation.amount:
                 raise InsufficientFundsError(f"Insufficient funds for user: {allocation.user_id}")
+
+            locked_cash_accounts[allocation.user_id] = cash_account.id
+
+        return locked_cash_accounts
 
     async def _create_trade_execution(self, request: BuyTradeRequest, admin_user_id: UUID) -> TradeExecution:
         """
@@ -327,7 +338,7 @@ class BuyService:
             )
         return allocations
 
-    async def _build_ledger_transactions(self, allocations: list[AllocationInput], treasury_account_id: UUID, reference_id: UUID) -> list[LedgerTransaction]:
+    async def _build_ledger_transactions(self, allocations: list[AllocationInput], treasury_account_id: UUID, reference_id: UUID, locked_cash_accounts: dict[UUID, UUID]) -> list[LedgerTransaction]:
         """
         Build ledger movement entries.
 
@@ -341,6 +352,9 @@ class BuyService:
             reference_id:
                 Trade reference identifier.
 
+            locked_cash_accounts:
+                Mapping of user identifiers to locked cash account ids.
+
         Returns:
             list[LedgerTransaction]:
                 Ledger entries.
@@ -348,15 +362,15 @@ class BuyService:
         transactions: list[LedgerTransaction] = []
 
         for allocation in allocations:
-            cash_account = await self.account_repository.get_user_cash_account(allocation.user_id)
+            cash_account_id = locked_cash_accounts.get(allocation.user_id)
 
-            if cash_account is None:
+            if cash_account_id is None:
                 raise ResourceNotFoundError(f"Cash account missing for user: {allocation.user_id}")
 
             transactions.append(
                 LedgerTransaction(
                     id=uuid4(),
-                    from_account_id=cash_account.id,
+                    from_account_id=cash_account_id,
                     to_account_id=treasury_account_id,
                     amount=allocation.amount,
                     reference_type=TransactionReferenceType.ALLOCATION,
