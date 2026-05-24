@@ -15,6 +15,7 @@ python-dotenv
 # Auth / JWT
 python-jose[cryptography]
 cryptography
+PyJWT
 
 # HTTP client
 httpx
