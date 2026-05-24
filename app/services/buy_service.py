@@ -81,16 +81,17 @@ class BuyService:
             InsufficientFundsError:
                 If user balances are insufficient.
         """
-        async with self.db.begin():
+
+        try:
             total_trade_cost = self._calculate_total_trade_cost(
-                quantity= request.quantity,
-                price   = request.price,
-                charges = request.charges
+                quantity=request.quantity,
+                price=request.price,
+                charges=request.charges
             )
 
             self._validate_allocations(
-                expected_total= total_trade_cost,
-                allocations   = request.allocations
+                expected_total=total_trade_cost,
+                allocations=request.allocations
             )
 
             locked_cash_accounts = await self._validate_users_and_balances(
@@ -105,39 +106,42 @@ class BuyService:
             trade = await self._create_trade_execution(request=request, admin_user_id=admin_user_id)
 
             position = await self._create_master_position(
-                request =request,
+                request=request,
                 trade_id=trade.id
             )
 
-            trade.position_id = position.id
-
-            await self.trade_repository.update(trade)
-
             allocation_records = self._build_position_allocations(
-                total_trade_cost= total_trade_cost,
-                position_id     = position.id,
-                request         = request
+                total_trade_cost=total_trade_cost,
+                position_id=position.id,
+                request=request
             )
 
             await self.allocation_repository.create_many(allocation_records)
 
             ledger_transactions = await self._build_ledger_transactions(
-                treasury_account_id = treasury_account.id,
-                reference_id        = trade.id,
-                allocations         = request.allocations,
-                locked_cash_accounts= locked_cash_accounts
+                treasury_account_id=treasury_account.id,
+                reference_id=trade.id,
+                allocations=request.allocations,
+                locked_cash_accounts=locked_cash_accounts
             )
 
             await self.ledger_repository.create_many(ledger_transactions)
 
-            return BuyTradeResponse(
+            response = BuyTradeResponse(
                 trade=TradeExecutionResponse.model_validate(trade),
                 position_id=position.id,
                 total_allocated_amount=sum(
                     allocations.amount for allocations in request.allocations
                 ),
-                allocations_count=len(request.allocations)
+                allocation_count=len(request.allocations)
             )
+
+            await self.db.commit()
+            return response
+
+        except Exception:
+            await self.db.rollback()
+            raise
 
     def _calculate_total_trade_cost(self, quantity: Decimal, price: Decimal, charges: Decimal) -> Decimal:
         """
@@ -276,6 +280,7 @@ class BuyService:
             MasterPosition:
                 Persisted master position.
         """
+        total_trade_cost = self._calculate_total_trade_cost(quantity=request.quantity, price=request.price, charges=request.charges)
         position = MasterPosition(
             id=uuid4(),
             originating_trade_id=trade_id,
@@ -284,6 +289,9 @@ class BuyService:
             asset_type=request.asset_type,
             total_quantity=request.quantity,
             remaining_quantity=request.quantity,
+            allocated_quantity=Decimal("0"),
+            buy_price=request.price,
+            total_cost=total_trade_cost,
             status=PositionStatus.OPEN,
             opened_at=request.executed_at,
             closed_at=None,
@@ -375,7 +383,11 @@ class BuyService:
                     amount=allocation.amount,
                     reference_type=TransactionReferenceType.ALLOCATION,
                     reference_id=reference_id,
-                    description=f"Capital allocation for pooled buy trade {reference_id}"
+                    ledger_metadata={
+                        "event"   : "pooled_buy_allocation",
+                        "trade_id": str(reference_id),
+                        "user_id" : str(allocation.user_id),
+                    }
                 )
             )
 
