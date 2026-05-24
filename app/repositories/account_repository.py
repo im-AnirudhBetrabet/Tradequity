@@ -151,3 +151,43 @@ class AccountRepository:
         result = await self.db.execute(stmt)
 
         return result.scalar_one_or_none()
+
+    async def get_user_settlement_account(self, user_id: UUID) -> Account | None:
+        """
+        Retrieve a user's settlement account.
+
+        Args:
+            user_id:
+                Target user identifier.
+
+        Returns:
+            Account | None:
+                Matching settlement account if found.
+        """
+        stmt = select(Account).where(
+            Account.user_id == user_id,
+            Account.account_type == AccountType.USER_SETTLEMENT,
+            Account.is_active.is_(True)
+        )
+        result = await self.db.execute(stmt)
+
+        return result.scalar_one_or_none()
+
+
+    async def get_platform_fee_reserve_account(self) -> Account | None:
+        """
+        Retrieve the platform performance fee reserve account.
+
+        Returns:
+             Account | None:
+                Matching active fee reserve account.
+        """
+
+        stmt = select(Account).where(
+            Account.account_type == AccountType.PLATFORM_FEE,
+            Account.is_active.is_(True)
+        )
+
+        result = await self.db.execute(stmt)
+
+        return result.scalar_one_or_none()

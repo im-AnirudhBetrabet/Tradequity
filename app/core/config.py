@@ -16,7 +16,7 @@ Usage:
 
     database_url = settings.database_url
 """
-
+from decimal import Decimal
 from functools import lru_cache
 
 from pydantic          import Field
@@ -81,6 +81,7 @@ class Settings(BaseSettings):
 
     market_refresh_interval_seconds     : int = Field(default=300)
     stale_market_price_threshold_seconds: int = Field(default=900)
+    platform_performance_fee            : Decimal = Decimal("0.10")
 
 
 @lru_cache

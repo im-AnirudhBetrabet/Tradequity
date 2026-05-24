@@ -15,7 +15,7 @@ from decimal  import Decimal
 from uuid     import UUID
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from app.db.enums import AssetType, TradeType
+from app.db.enums import AssetType, TradeType, SellMode
 
 class AllocationInput(BaseModel):
     """
@@ -147,14 +147,22 @@ class SellTradeRequest(BaseModel):
 
         notes:
             Optional administrative notes.
+
+        mode:
+            Sell execution strategy.
+
+        target_user_id:
+            Required only for targeted liquidation.
     """
 
-    position_id: UUID
-    quantity   : Decimal = Field(gt=0)
-    price      : Decimal = Field(gt=0)
-    charges    : Decimal = Field(ge=0)
-    executed_at: datetime
-    notes      : str | None = Field(default=None, max_length=2000)
+    position_id   : UUID
+    quantity      : Decimal     = Field(gt=0)
+    price         : Decimal     = Field(gt=0)
+    charges       : Decimal     = Field(ge=0)
+    executed_at   : datetime
+    notes         : str | None  = Field(default=None, max_length=2000)
+    mode          : SellMode    = SellMode.PROPORTIONAL
+    target_user_id: UUID | None = None
 
     @field_validator("quantity", "price", "charges")
     @classmethod
@@ -176,6 +184,23 @@ class SellTradeRequest(BaseModel):
             )
 
         return value
+
+    @field_validator("target_user_id")
+    @classmethod
+    def validate_targeted_mode(cls, value: UUID | None, info) -> UUID | None:
+        """
+        Validate targeted sell requirements.
+        """
+        mode = info.data.get("mode")
+
+        if mode == SellMode.TARGETED and value is None:
+            raise ValueError("target_user_id is required for targeted sell.")
+
+        if mode == SellMode.PROPORTIONAL and value is not None:
+            raise ValueError("target_user_id should not be provided for proportional sell")
+
+        return value
+
 
 
 class TradeExecutionResponse(BaseModel):

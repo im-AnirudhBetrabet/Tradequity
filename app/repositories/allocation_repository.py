@@ -165,3 +165,30 @@ class AllocationRepository:
 
         return allocation
 
+    async def get_open_by_position_and_user_for_update(self, position_id: UUID, user_id: UUID) -> list[PositionAllocation]:
+        """
+        Retrieve and lock open allocations for a specific user within
+        a master position.
+
+        This method is used for targeted liquidation workflows.
+
+        Args:
+            position_id:
+                Target master position identifier.
+
+            user_id:
+                Target investor identifier.
+
+        Returns:
+            list[PositionAllocation]:
+                Locked matching allocations.
+        """
+        stmt = select(PositionAllocation).where(
+            PositionAllocation.position_id == position_id,
+            PositionAllocation.user_id     == user_id,
+            PositionAllocation.status      == AllocationStatus.OPEN
+        ).with_for_update()
+
+        result = await self.db.execute(stmt)
+
+        return list(result.scalars().all())

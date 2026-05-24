@@ -289,7 +289,7 @@ class BuyService:
             asset_type=request.asset_type,
             total_quantity=request.quantity,
             remaining_quantity=request.quantity,
-            allocated_quantity=request.quantity,
+            allocated_quantity=Decimal("0"),
             buy_price=request.price,
             total_cost=total_trade_cost,
             status=PositionStatus.OPEN,

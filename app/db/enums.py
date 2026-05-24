@@ -32,20 +32,21 @@ class AccountType(str, Enum):
     USER_CASH         = "user_cash"
     PLATFORM_TREASURY = "platform_treasury"
     PLATFORM_REVENUE  = "platform_revenue"
-
+    USER_SETTLEMENT   = "user_settlement"
+    PLATFORM_FEE      = "platform_fee_reserve"
 
 class TransactionReferenceType(str, Enum):
     """
     Supported ledger transaction reference classifications.
     """
 
-    DEPOSIT     = "deposit"
-    WITHDRAWAL  = "withdrawal"
-    ALLOCATION  = "allocation"
-    REALIZATION = "profit_realization"
-    FEE         = "performance_fee"
-    ADJUSTMENT  = "adjustment"
-    PENALTY     = "redemption_penalty"
+    DEPOSIT         = "deposit"
+    WITHDRAWAL      = "withdrawal"
+    ALLOCATION      = "allocation"
+    REALIZATION     = "profit_realization"
+    FEE             = "performance_fee"
+    ADJUSTMENT      = "adjustment"
+    PENALTY         = "redemption_penalty"
 
 class AssetType(str, Enum):
     """
@@ -87,3 +88,16 @@ class WithdrawalStatus(str, Enum):
     PROCESSING = "processing"
     COMPLETED  = "completed"
     FAILED     = "failed"
+
+class SellMode(str, Enum):
+    """
+    Sell execution strategy.
+
+    PROPORTIONAL:
+        Sell proportionally across all open allocations.
+
+    TARGETED:
+        Sell only allocations belonging to a specific user.
+    """
+    PROPORTIONAL = "proportional"
+    TARGETED     = "targeted"
