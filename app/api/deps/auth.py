@@ -13,21 +13,16 @@ Design principles:
     - Clear authentication failure semantics.
 """
 
-import httpx
+import jwt
 from typing              import Any
 from uuid                import UUID
-from datetime            import datetime, timedelta, timezone
-from fastapi             import Depends, HTTPException, Security
+from fastapi             import HTTPException, Security
 from fastapi.security    import HTTPAuthorizationCredentials, HTTPBearer
-from jose                import JWTError, jwt
+from jwt                 import PyJWTError, PyJWKClient
 from app.core.config     import settings
 from app.core.exceptions import AuthenticationError
 
 security_scheme = HTTPBearer(auto_error=True)
-
-_JWKS_CACHE       : dict[str, Any] | None = None
-_JWKS_CACHE_EXPIRY: datetime | None       = None
-_JWKS_CACHE_TTL                           = timedelta(minutes=10)
 
 class AuthenticatedUser:
     """
@@ -45,46 +40,9 @@ class AuthenticatedUser:
         self.user_id = user_id
         self.claims  = claims
 
-def _jwks_cache_valid() -> bool:
-    if _JWKS_CACHE is None or _JWKS_CACHE_EXPIRY is None:
-        return False
-    return datetime.now(timezone.utc) < _JWKS_CACHE_EXPIRY
-
-async def fetch_jwks() -> dict[str, Any]:
-    """
-    Retrieve the Supabase JWKS document with TTL-based caching.
-
-    Returns:
-        dict[str, Any]:
-            JWKS payload containing public signing keys.
-
-    Raises:
-        AuthenticationError:
-            If the JWKS document cannot be retrieved.
-    """
-
-    global _JWKS_CACHE
-    global _JWKS_CACHE_EXPIRY
-
-    if _jwks_cache_valid():
-        return _JWKS_CACHE
-
-    try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            response = await client.get(settings.supabase_jwks_url)
-            response.raise_for_status()
-
-        _JWKS_CACHE        = response.json()
-        _JWKS_CACHE_EXPIRY = datetime.now(timezone.utc) + _JWKS_CACHE_TTL
-
-        return _JWKS_CACHE
-
-    except Exception as exc:
-        raise AuthenticationError("Unable to fetch JWKS") from exc
-
 async def get_current_user( credentials: HTTPAuthorizationCredentials = Security(security_scheme) ) -> AuthenticatedUser:
     """
-    Validate the incoming bearer token and return authenticated user contenxt.
+    Validate the incoming bearer token and return authenticated user context.
 
     Args:
         credentials:
@@ -101,32 +59,39 @@ async def get_current_user( credentials: HTTPAuthorizationCredentials = Security
     token = credentials.credentials
 
     try:
-        jwks = await fetch_jwks()
+        jwk_client = PyJWKClient(settings.supabase_jwks_url)
+
+        signing_key = jwk_client.get_signing_key_from_jwt(token)
 
         claims = jwt.decode(
-            token=token,
-            key=jwks,
-            algorithms=["RS256"],
+            token,
+            signing_key.key,
+            algorithms=["RS256", "HS256", "ES256"],
             audience=settings.supabase_audience,
-            issuer=settings.supabase_issuer
+            issuer=settings.supabase_issuer,
         )
 
         subject = claims.get("sub")
 
         if not subject:
-            raise AuthenticationError("JWT subject claim is missing")
+            raise AuthenticationError(
+                "JWT subject claim is missing"
+            )
+
         try:
             user_id = UUID(subject)
         except ValueError as exc:
-            raise AuthenticationError("JWT subject claim is not a valid UUID") from exc
+            raise AuthenticationError(
+                "JWT subject claim is not a valid UUID"
+            ) from exc
 
         return AuthenticatedUser(
             user_id=user_id,
-            claims=claims
+            claims=claims,
         )
 
-    except (JWTError, AuthenticationError) as exc:
+    except (PyJWTError, AuthenticationError) as exc:
         raise HTTPException(
             status_code=401,
-            detail="Authentication failed",
+            detail=f"Authentication failed: {str(exc)}",
         ) from exc
