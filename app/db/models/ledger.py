@@ -17,6 +17,7 @@ from enum     import Enum
 from uuid     import UUID
 
 from sqlalchemy     import DateTime, Enum as SqlEnum, ForeignKey, Numeric, Text
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
 
@@ -65,8 +66,8 @@ class LedgerTransaction(Base):
     from_account_id: Mapped[UUID]                     = mapped_column(ForeignKey("accounts.id", ondelete="RESTRICT"), nullable=False)
     to_account_id  : Mapped[UUID]                     = mapped_column(ForeignKey("accounts.id", ondelete="RESTRICT"), nullable=False)
     amount         : Mapped[Decimal]                  = mapped_column(Numeric(20, 8), nullable=False)
-    reference_type : Mapped[TransactionReferenceType] = mapped_column(SqlEnum(TransactionReferenceType, name="transaction_reference_type", native_enum=True), nullable=False)
+    reference_type : Mapped[TransactionReferenceType] = mapped_column(SqlEnum(TransactionReferenceType, name="ledger_reference_type", native_enum=True, values_callable=lambda enum_cls: [e.value for e in enum_cls]), nullable=False)
     reference_id   : Mapped[UUID]                     = mapped_column(nullable=False)
-    description    : Mapped[str | None]               = mapped_column(Text, nullable=True)
+    ledger_metadata: Mapped[dict | None]              = mapped_column("metadata",JSONB, nullable=True)
     created_at     : Mapped[datetime]                 = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
     

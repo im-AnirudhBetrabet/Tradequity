@@ -83,7 +83,7 @@ class WithdrawalRequest(Base):
     penalty_amount      : Mapped[Decimal]          = mapped_column(Numeric(20, 8),nullable=False)
     net_payout          : Mapped[Decimal]          = mapped_column(Numeric(20, 8),nullable=False)
     liquidation_required: Mapped[bool]             = mapped_column(Boolean,nullable=False)
-    status              : Mapped[WithdrawalStatus] = mapped_column(SqlEnum(WithdrawalStatus, name="withdrawal_status", native_enum=True), nullable=False)
+    status              : Mapped[WithdrawalStatus] = mapped_column(SqlEnum(WithdrawalStatus, name="withdrawal_status", native_enum=True, values_callable=lambda enum_cls: [e.value for e in enum_cls]), nullable=False)
     requested_at        : Mapped[datetime]         = mapped_column(DateTime(timezone=True),nullable=False)
     processed_at        : Mapped[datetime | None]  = mapped_column(DateTime(timezone=True),nullable=True)
     completed_at        : Mapped[datetime | None]  = mapped_column(DateTime(timezone=True),nullable=True)

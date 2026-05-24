@@ -71,7 +71,7 @@ class PositionAllocation(Base):
     remaining_quantity: Mapped[Decimal]          = mapped_column(Numeric(20, 8),nullable=False)
     original_cost     : Mapped[Decimal]          = mapped_column(Numeric(20, 8),nullable=False)
     remaining_cost    : Mapped[Decimal]          = mapped_column(Numeric(20, 8),nullable=False)
-    status            : Mapped[AllocationStatus] = mapped_column(SqlEnum(AllocationStatus, name="allocation_status", native_enum=True),nullable=False)
+    status            : Mapped[AllocationStatus] = mapped_column(SqlEnum(AllocationStatus, name="allocation_status", native_enum=True, values_callable=lambda enum_cls: [e.value for e in enum_cls]),nullable=False)
     opened_at         : Mapped[datetime]         = mapped_column(DateTime(timezone=True), nullable=False)
     closed_at         : Mapped[datetime | None]  = mapped_column(DateTime(timezone=True), nullable=True)
     created_at        : Mapped[datetime]         = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
