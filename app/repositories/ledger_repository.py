@@ -100,9 +100,9 @@ class LedgerRepository:
                                 -LedgerTransaction.amount,
                             ),
                             else_=Decimal("0"),
-                        ),
+                        )
+                ),
                     Decimal("0"),
-                )
             )
         )
 
