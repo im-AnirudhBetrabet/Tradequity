@@ -13,45 +13,44 @@ Design principles:
 from datetime import datetime
 from decimal  import Decimal
 from uuid     import UUID
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from app.db.enums import AssetType, TradeType, SellMode
 
 class AllocationInput(BaseModel):
     """
-    Capital allocation input for pooled buy execution.
+    Share allocation input for pooled buy execution.
 
     Attributes:
         user_id:
             User receiving beneficial ownership.
 
-        amount:
-            Capital amount contributed by the user.
+        quantity:
+            Whole shares assigned to the user.
     """
 
-    user_id: UUID
-    amount : Decimal = Field(gt=0)
+    user_id : UUID
+    quantity: Decimal = Field(gt=Decimal("0"), description="Whole shares allocated to user")
 
-    @field_validator("amount")
+    @field_validator("quantity")
     @classmethod
-    def validate_amount_precision(cls, value: Decimal) -> Decimal:
+    def validate_whole_quantity(cls, value: Decimal) -> Decimal:
         """
-        Validate allocation amount precision
+        Validate if the quantity is a whole number.
         Args:
             value:
-                Submitted allocation amount.
+                Submitted allocation quantity.
 
         Returns:
             Decimal:
-                Validated amount.
+                Validated quantity.
 
         Raises:
             ValueError:
-                If amount precision exceeds supported limits.
+                If allocation quantity is not a whole number.
         """
-        if value.as_tuple().exponent < -8:
-            raise ValueError("Allocation amount exceeds supported decimal precision")
-
+        if value != value.to_integral_value():
+            raise ValueError("Quantity must be a whole number")
         return value
 
 
@@ -124,6 +123,20 @@ class BuyTradeRequest(BaseModel):
 
         return value
 
+    @model_validator(mode="after")
+    def validate_allocations(self):
+        """
+        Ensure allocated quantities match executed quantity.
+        """
+
+        total_allocated = sum(allocation.quantity for allocation in self.allocations)
+
+        if total_allocated != self.quantity:
+            raise ValueError(
+                "Allocated quantity must equal trade quantity"
+            )
+
+        return self
 
 class SellTradeRequest(BaseModel):
     """
@@ -227,10 +240,10 @@ class BuyTradeResponse(BaseModel):
     Administrative buy workflow response payload.
     """
 
-    trade                 : TradeExecutionResponse
-    position_id           : UUID
-    total_allocated_amount: Decimal
-    allocation_count      : int
+    trade                   : TradeExecutionResponse
+    position_id             : UUID
+    total_allocated_quantity: Decimal
+    allocation_count        : int
 
 
 class SellTradeResponse(BaseModel):
