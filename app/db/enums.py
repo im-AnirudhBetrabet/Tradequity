@@ -101,3 +101,9 @@ class SellMode(str, Enum):
     """
     PROPORTIONAL = "proportional"
     TARGETED     = "targeted"
+
+class SuggestionStrategy(str, Enum):
+    MAX_DEPLOYMENT = "max_deployment"
+    PROPORTIONAL   = "proportional"
+    BALANCED       = "balanced"
+    CONSERVATIVE   = "conservative"

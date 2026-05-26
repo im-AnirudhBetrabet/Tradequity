@@ -8,9 +8,10 @@ exception handlers, and API routes.
 from contextlib import asynccontextmanager
 from fastapi    import FastAPI
 
-from app.api.v1.admin.trades     import router as admin_trades_router
-from app.core.config             import settings
-from app.core.exception_handlers import  register_exception_handlers
+from app.api.v1.admin.trades      import router as admin_trades_router
+from app.api.v1.admin.allocations import router as allocation_suggestion_router
+from app.core.config              import settings
+from app.core.exception_handlers  import register_exception_handlers
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -44,6 +45,7 @@ def create_application() -> FastAPI:
     register_exception_handlers(app)
 
     app.include_router(admin_trades_router)
+    app.include_router(allocation_suggestion_router)
 
     return app
 
