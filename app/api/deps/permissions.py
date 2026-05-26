@@ -14,6 +14,7 @@ Design principles:
 from fastapi                             import Depends, HTTPException
 from sqlalchemy.ext.asyncio              import AsyncSession
 from app.api.deps.auth                   import AuthenticatedUser, get_current_user
+from app.db.enums                        import UserRole
 from app.db.session                      import get_db_session
 from app.repositories.profile_repository import ProfileRepository
 
@@ -53,7 +54,7 @@ async def require_admin(
             detail="User profile not found"
         )
 
-    if not profile.is_admin:
+    if profile.role != UserRole.ADMIN:
         raise HTTPException(
             status_code=403,
             detail="Administrative access required"

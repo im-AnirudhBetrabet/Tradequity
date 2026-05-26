@@ -107,3 +107,10 @@ class SuggestionStrategy(str, Enum):
     PROPORTIONAL   = "proportional"
     BALANCED       = "balanced"
     CONSERVATIVE   = "conservative"
+
+class UserRole(str, Enum):
+    """
+    User role for profiles
+    """
+    ADMIN    = "admin"
+    INVESTOR = "investor"
