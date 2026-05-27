@@ -141,3 +141,32 @@ class ProfileRepository:
         await self.db.flush()
 
         return profile
+
+    async def update_full_name(self, user_id: UUID, full_name: str) -> Profile | None:
+        """
+        Update profile display name.
+
+        Args:
+            user_id:
+                Target profile identifier.
+
+            full_name:
+                Updated display name.
+
+        Returns:
+            Profile | None:
+                Updated profile entity if found or None
+        """
+
+        profile = await self.get_by_id(user_id)
+
+        if profile is None:
+            return None
+
+        profile.full_name = full_name
+
+        await self.db.flush()
+
+        await self.db.refresh(profile)
+
+        return profile

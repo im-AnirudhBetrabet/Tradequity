@@ -3,7 +3,7 @@
 from datetime import datetime
 from decimal  import Decimal
 from uuid     import UUID
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.db.enums import UserRole
 
@@ -41,3 +41,17 @@ class CurrentUserResponse(BaseModel):
     minimum_profit_threshold: Decimal | None
     created_at              : datetime
     updated_at              : datetime
+
+class UpdateProfileRequest(BaseModel):
+    """
+    Profile update request payload.
+
+    Attributes:
+        full_name:
+            Updated user display name.
+    """
+
+    full_name: str = Field(
+        min_length=1,
+        max_length=255
+    )

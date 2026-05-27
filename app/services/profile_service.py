@@ -9,7 +9,7 @@ from uuid import UUID
 
 from app.core.exceptions                 import ResourceNotFoundError
 from app.repositories.profile_repository import ProfileRepository
-from app.schemas.user.profile            import CurrentUserResponse
+from app.schemas.user.profile            import CurrentUserResponse, UpdateProfileRequest
 from sqlalchemy.ext.asyncio              import AsyncSession
 
 class ProfileService:
@@ -40,6 +40,40 @@ class ProfileService:
         """
 
         profile = await self.profile_repository.get_active_by_id(user_id)
+
+        if profile is None:
+            raise ResourceNotFoundError("User profile not found")
+
+        return CurrentUserResponse(
+            id=profile.id,
+            full_name=profile.full_name,
+            role=profile.role,
+            is_active=profile.is_active,
+            minimum_profit_threshold=profile.minimum_profit_threshold,
+            created_at=profile.created_at,
+            updated_at=profile.updated_at
+        )
+
+    async def update_current_user_profile(self, user_id: UUID, request: UpdateProfileRequest) -> CurrentUserResponse:
+        """
+        Update authenticated user profile
+        Args:
+            user_id:
+                Authenticated user identifier.
+
+            request:
+                Update payload
+
+        Returns:
+            ProfileResponse:
+                Updated profile payload.
+
+        Raises:
+            ResourceNotFoundError:
+                If profile does not exist.
+        """
+
+        profile = await self.profile_repository.update_full_name(user_id=user_id, full_name=request.full_name.strip())
 
         if profile is None:
             raise ResourceNotFoundError("User profile not found")
