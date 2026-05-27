@@ -69,6 +69,7 @@ async def get_current_user( credentials: HTTPAuthorizationCredentials = Security
             algorithms=["RS256", "HS256", "ES256"],
             audience=settings.supabase_audience,
             issuer=settings.supabase_issuer,
+            leeway=60
         )
 
         subject = claims.get("sub")
