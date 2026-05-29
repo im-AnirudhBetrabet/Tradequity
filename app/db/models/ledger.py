@@ -52,7 +52,7 @@ class LedgerTransaction(Base):
         reference_id:
             Related main entity identifier.
 
-        description:
+        ledger_metadata:
             Human-readable transaction description.
 
         created_at:

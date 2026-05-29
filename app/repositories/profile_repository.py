@@ -11,9 +11,12 @@ Design principles:
 """
 
 from uuid                   import UUID
-from sqlalchemy             import select
+from sqlalchemy             import select, func, case, and_
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.db.enums           import UserRole
 from app.db.models.profile  import Profile
+from app.db.models.account  import Account
+from app.db.enums           import AccountType, UserRole
 
 
 class ProfileRepository:
@@ -170,3 +173,45 @@ class ProfileRepository:
         await self.db.refresh(profile)
 
         return profile
+
+    async def search_investors(self, page: int, page_size: int, search: str | None) -> tuple[list[Profile], int]:
+        """
+        Retrieve paginated investor profiles.
+
+        Args:
+            page:
+                Requested page number.
+
+            page_size:
+                Requested page size.
+
+            search:
+                Optional investor name search.
+
+        Returns:
+            tuple[list[Profile], int]:
+                Matching profiles and total count.
+        """
+
+        stmt = select(Profile).where(
+            Profile.role == UserRole.INVESTOR
+        )
+
+        if search:
+            stmt = stmt.where(
+                Profile.full_name.ilike(f"%{search}%")
+            )
+
+        count_stmt = select(func.count()).select_from(stmt.subquery())
+
+        total_result = await self.db.execute(count_stmt)
+
+        total = total_result.scalar_one()
+
+        stmt = stmt.order_by(Profile.created_at.desc()).offset((page - 1) * page_size).limit(page_size)
+
+        result = await self.db.execute(stmt)
+
+        profiles = list(result.scalars().all())
+
+        return profiles, total

@@ -13,7 +13,7 @@ Design principles:
 from app.db.models.allocation import PositionAllocation
 from app.db.enums             import AllocationStatus
 from sqlalchemy.ext.asyncio   import AsyncSession
-from sqlalchemy               import select
+from sqlalchemy               import select, func
 from uuid                     import UUID
 
 class AllocationRepository:
@@ -192,3 +192,37 @@ class AllocationRepository:
         result = await self.db.execute(stmt)
 
         return list(result.scalars().all())
+
+    async def get_active_position_counts(self, user_ids: list[UUID]) -> dict[UUID, int]:
+        """
+        Get the counts of active position(s) (holdings) for the users
+        Args:
+            user_ids:
+                list of user ids
+
+        Returns:
+             dict[UUID, int]:
+                User ids mapped to the corresponding number of active positions.
+        """
+
+        if not user_ids:
+            return {}
+
+        stmt = select(
+            PositionAllocation.user_id,
+            func.count(PositionAllocation.id).label(
+                "holding_count"
+            )
+        ).where(
+            PositionAllocation.user_id.in_(user_ids),
+            PositionAllocation.status == AllocationStatus.OPEN
+        ).group_by(
+            PositionAllocation.user_id
+        )
+
+        result = await self.db.execute(stmt)
+
+        return {
+            row.user_id: int(row.holding_count)
+            for row in result.all()
+        }

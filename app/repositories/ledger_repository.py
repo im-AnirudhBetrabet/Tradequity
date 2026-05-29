@@ -53,7 +53,7 @@ class LedgerRepository:
 
         return transaction
 
-    async def create_many(self, transactions: [LedgerTransaction]) -> list[LedgerTransaction]:
+    async def create_many(self, transactions: list[LedgerTransaction]) -> list[LedgerTransaction]:
         """
         Persist multiple ledger transactions.
 
