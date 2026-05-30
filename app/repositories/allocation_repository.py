@@ -9,6 +9,7 @@ Design principles:
     - Transaction - safe row locking for mutable ownership state.
     - Async SQLAlchemy access patters.
 """
+from decimal import Decimal
 
 from app.db.models.allocation import PositionAllocation
 from app.db.enums             import AllocationStatus
@@ -226,3 +227,88 @@ class AllocationRepository:
             row.user_id: int(row.holding_count)
             for row in result.all()
         }
+
+    async def get_active_position_count(self, user_id: UUID) -> int:
+        """
+        Get the counts of active position(s) (holdings) for a user
+        Args:
+            user_id:
+                list of user ids
+
+        Returns:
+             int:
+                Number of active holdings for the user
+        """
+
+        if not user_id:
+            return 0
+
+        stmt = select(
+                func.count(
+                    PositionAllocation.id
+                )
+            ).where(
+                PositionAllocation.user_id == user_id,
+                PositionAllocation.status == AllocationStatus.OPEN,
+            )
+
+        result = await self.db.execute(stmt)
+
+        return int(result.scalar_one())
+
+    async def get_open_by_user_id(self, user_id: UUID) -> list[PositionAllocation]:
+        """
+        Retrieve all open allocations for an investor.
+
+        Args:
+            user_id:
+                Target investor identifier.
+
+        Returns:
+            list[PositionAllocation]:
+                Open allocations.
+        """
+
+        stmt = select(PositionAllocation).where(
+            PositionAllocation.user_id == user_id,
+            PositionAllocation.status == AllocationStatus.OPEN,
+        )
+
+        result = await self.db.execute(stmt)
+
+        return list(result.scalars().all())
+
+    async def get_total_invested_amount(
+            self,
+            user_id: UUID,
+    ) -> Decimal:
+        """
+        Retrieve total invested capital for an investor.
+
+        Invested capital is calculated as the sum of the
+        remaining cost basis of all open allocations.
+
+        Args:
+            user_id:
+                Target investor identifier.
+
+        Returns:
+            Decimal:
+                Total invested capital.
+        """
+
+        stmt = select(
+            func.coalesce(
+                func.sum(
+                    PositionAllocation.remaining_cost
+                ),
+                0,
+            )
+        ).where(
+            PositionAllocation.user_id == user_id,
+            PositionAllocation.status == AllocationStatus.OPEN,
+        )
+
+        result = await self.db.execute(stmt)
+
+        return result.scalar_one()

@@ -105,3 +105,30 @@ class PositionRepository:
         await self.db.flush()
 
         return position
+
+    async def get_by_ids(self, position_ids: list[UUID]) -> dict[UUID, MasterPosition]:
+        """
+        Retrieve multiple master psotions
+
+        Args:
+            position_ids:
+                Target master position identifiers.
+        Returns:
+             dict[UUID, MasterPosition]:
+                Position identifier mapped to position entity.
+        """
+        if not position_ids:
+            return {}
+
+        stmt = select(MasterPosition).where(
+            MasterPosition.id.in_(position_ids)
+        )
+
+        result = await self.db.execute(stmt)
+
+        positions = result.scalars().all()
+
+        return {
+            position.id: position
+            for position in positions
+        }

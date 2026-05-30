@@ -4,7 +4,6 @@ Administrative investor API schemas.
 
 from datetime import datetime
 from decimal  import Decimal
-from email.policy import default
 from uuid     import UUID
 
 from fastapi import Query
@@ -40,3 +39,35 @@ class InvestorListQueryParams(BaseModel):
     page     : int        = Field(default=1, ge=1)
     page_size: int        = Field(default=20, ge=1, le=100)
     search   : str | None = Query(default=None)
+
+class InvestorProfileResponse(BaseModel):
+    id        : UUID
+    full_name : str
+    is_active : bool
+    created_at: datetime
+
+class InvestorSummaryResponse(BaseModel):
+    cash_balance     : Decimal
+    invested_amount  : Decimal
+    holding_count    : int
+    lifetime_deposits: Decimal
+
+class InvestorHoldingResponse(BaseModel):
+    symbol  : str
+    quantity: Decimal
+    average_price: Decimal
+    current_price: Decimal | None
+
+class InvestorTransactionResponse(BaseModel):
+    transaction_type: str
+    amount          : Decimal
+    created_at      : datetime
+
+class InvestorDetailResponse(BaseModel):
+    profile: InvestorProfileResponse
+
+    summary: InvestorSummaryResponse
+
+    holdings: list[InvestorHoldingResponse]
+
+    recent_transactions: list[InvestorTransactionResponse]

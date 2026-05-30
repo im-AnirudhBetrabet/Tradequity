@@ -15,6 +15,8 @@ from decimal                import Decimal
 from uuid                   import UUID
 from sqlalchemy             import case, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.db.enums import TransactionReferenceType
 from app.db.models.ledger   import LedgerTransaction
 
 class LedgerRepository:
@@ -130,3 +132,66 @@ class LedgerRepository:
         result = await self.db.execute(stmt)
 
         return list(result.scalars().all())
+
+    async def get_total_deposits(self, account_id: UUID) -> Decimal:
+        """
+        Retrieve total deposits credited into an account.
+        Args:
+            account_id:
+                Target account identifier.
+
+        Returns:
+            Decimal:
+                Total deposited amount.
+        """
+
+        stmt = select(
+            func.coalesce(
+                func.sum(
+                    LedgerTransaction.amount
+                ),
+                Decimal("0")
+            )
+        ).where(
+            LedgerTransaction.to_account_id == account_id,
+            LedgerTransaction.reference_type == TransactionReferenceType.DEPOSIT
+        )
+
+        result = await self.db.execute(stmt)
+
+        return Decimal(result.scalar_one())
+
+    async def get_recent_transactions(self, account_id: UUID, limit: int = 10) -> list[LedgerTransaction]:
+        """
+        Retrieve recent account transactions.
+
+        Args:
+            account_id:
+                Target account identifier.
+
+            limit:
+                Maximum records to return.
+
+        Returns:
+            list[LedgerTransaction]:
+                Recent transactions ordered newest first.
+        """
+
+        stmt = (
+            select(LedgerTransaction)
+            .where(
+                (LedgerTransaction.from_account_id == account_id)
+                |
+                (LedgerTransaction.to_account_id == account_id)
+            )
+            .order_by(
+                LedgerTransaction.created_at.desc()
+            )
+            .limit(limit)
+        )
+
+        result = await self.db.execute(stmt)
+
+        return list(
+            result.scalars().all()
+        )
